@@ -46,6 +46,10 @@ audio { width: 100%; margin-top: 15px; }
 
 <div id="status">Bereit</div>
 <audio id="player" controls hidden></audio>
+
+<button id="auswerten" onclick="auswertungStarten()">
+  Aufnahme auswerten
+</button>
 </div>
 
 <script>
@@ -99,6 +103,26 @@ stop.onclick = () => {
     stop.disabled = true;
   }
 };
+  async function auswertungStarten() {
+  const audio = document.getElementById("player");
+
+  if (!audio.src) {
+    status.textContent = "Bitte zuerst eine Aufnahme machen.";
+    return;
+  }
+
+  status.textContent = "Aufnahme vorhanden. Verbindung wird vorbereitet.";
+
+  if (typeof APPS_SCRIPT_URL === "undefined" ||
+      !APPS_SCRIPT_URL.includes("/macros/s/") ||
+      !APPS_SCRIPT_URL.endsWith("/exec")) {
+    status.textContent = "Bitte die vollständige Apps-Script-URL eintragen.";
+    return;
+  }
+
+  status.textContent = "Aufnahme bereit für die KI-Auswertung.";
+}
+
 </script>
 </body>
 </html>
