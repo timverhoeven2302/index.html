@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meine Arbeitszeiterfassung</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f5f2;
+  text-align: center;
+  padding: 25px 12px;
+}
+.card {
+  background: white;
+  max-width: 450px;
+  margin: 25px auto;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 3px 15px #ddd;
+}
+button {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  margin: 14px 0;
+  border: 0;
+  border-radius: 12px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+#start { background: #16834a; }
+#stop { background: #bd3333; }
+#status { margin: 20px 0; font-weight: bold; }
+audio { width: 100%; margin-top: 15px; }
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Meine Arbeitszeiterfassung</h2>
+<p>Sprich deinen Arbeitstag einfach ein.</p>
+
+<button id="start">🎙 Aufnahme starten</button>
+<button id="stop" disabled>■ Aufnahme stoppen</button>
+
+<div id="status">Bereit</div>
+<audio id="player" controls hidden></audio>
+</div>
+
+<script>
+let recorder;
+let chunks = [];
+let stream;
+
+const start = document.getElementById("start");
+const stop = document.getElementById("stop");
+const status = document.getElementById("status");
+const player = document.getElementById("player");
+
+start.onclick = async () => {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Mikrofonzugriff nicht verfügbar. Bitte HTTPS verwenden.");
+    }
+
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks = [];
+
+    recorder = new MediaRecorder(stream);
+
+    recorder.ondataavailable = e => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, {type: recorder.mimeType});
+      player.src = URL.createObjectURL(blob);
+      player.hidden = false;
+      status.textContent = "Aufnahme fertig! Du kannst sie anhören.";
+      stream.getTracks().forEach(track => track.stop());
+    };
+
+    recorder.start();
+    start.disabled = true;
+    stop.disabled = false;
+    status.textContent = "🔴 Aufnahme läuft ...";
+
+  } catch (err) {
+    status.textContent = "Fehler: " + err.message;
+  }
+};
+
+stop.onclick = () => {
+  if (recorder && recorder.state === "recording") {
+    recorder.stop();
+    start.disabled = false;
+    stop.disabled = true;
+  }
+};
+</script>
+</body>
+</html>
